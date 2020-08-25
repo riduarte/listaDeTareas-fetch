@@ -1,42 +1,42 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			title: [],
+			item: 0
 		},
 		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
+			addTask: e => {
+				let store = getStore();
+				if (e.key === "Enter" && e.target.value != "") {
+					setStore({ title: [...store.title, { label: e.target.value, done: true }] });
+					setStore({ item: store.item + 1 });
+					e.target.value = "";
+					getActions().putTasks();
+				}
 			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
+			removeTask: index => {
+				let store = getStore();
+				let removeTaks = [...store.title];
+				removeTaks.splice(index, 1);
+				setStore({ item: store.item - 1 });
+				setStore({ title: removeTaks });
+				getActions().putTasks();
 			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
-
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
+			getTasks: async () => {
+				let store = getStore();
+				let response = await fetch(`https://assets.breatheco.de/apis/fake/todos/user/richard`);
+				response = await response.json();
+				setStore({ title: response });
+				setStore({ item: store.title.length - 1 });
+			},
+			putTasks: async () => {
+				let response = await fetch(`https://assets.breatheco.de/apis/fake/todos/user/richard`, {
+					method: "PUT",
+					body: JSON.stringify(getStore().title),
+					headers: {
+						"Content-type": "application/json"
+					}
 				});
-
-				//reset the global store
-				setStore({ demo: demo });
 			}
 		}
 	};
